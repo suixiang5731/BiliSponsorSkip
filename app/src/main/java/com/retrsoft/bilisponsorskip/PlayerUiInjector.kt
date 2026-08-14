@@ -397,8 +397,7 @@ internal class PlayerUiInjector(
     private fun isPlayerProgressView(view: View): Boolean {
         if (!view.isAttachedToWindow) return false
         val className = view.javaClass.name
-        return className == PLAYER_SEEK_WIDGET_V3_CLASS ||
-            className == STORY_SEEK_BAR_CLASS ||
+        return BilibiliCompatibility.isPlayerProgressClass(className) ||
             (view is SeekBar && className.startsWith(PLAYER_SEEK_PACKAGE_PREFIX))
     }
 
@@ -755,10 +754,7 @@ internal class PlayerUiInjector(
         const val VIDEO_RECYCLER_ID_NAME = "recycler"
         const val TITLE_ARROW_ID_NAME = "arrow"
         val PROGRESS_ID_NAMES = listOf("bbplayer_halfscreen_seekbar", "bbplayer_fullscreen_seekbar")
-        const val PLAYER_SEEK_WIDGET_V3_CLASS =
-            "com.bilibili.playerbizcommonv2.widget.seek.v3.PlayerSeekWidget3"
         const val PLAYER_SEEK_PACKAGE_PREFIX = "com.bilibili.playerbizcommonv2.widget.seek."
-        const val STORY_SEEK_BAR_CLASS = "com.bilibili.video.story.view.StorySeekBar"
         val PLAYER_TITLE_CLASSES = setOf(
             "com.bilibili.app.gemini.player.widget.base.GeminiPlayerTitleWidget",
             "com.bilibili.video.story.action.widget.StoryTitleWidget",

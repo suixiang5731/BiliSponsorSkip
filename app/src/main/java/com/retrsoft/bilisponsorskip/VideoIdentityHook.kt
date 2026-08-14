@@ -10,33 +10,51 @@ internal class VideoIdentityHook(
     private val controller: SkipController,
 ) {
     fun install() {
-        val mossClass = XposedHelpers.findClassIfExists(PLAYER_MOSS_CLASS, classLoader)
-            ?: error("$PLAYER_MOSS_CLASS not found")
         val handlerClass = XposedHelpers.findClassIfExists(MOSS_HANDLER_CLASS, classLoader)
-
-        hookRequestMethod(mossClass, "executePlayViewUnite", handlerClass)
-        hookRequestMethod(mossClass, "playViewUnite", handlerClass)
+        var hookedMethodCount = 0
+        BilibiliCompatibility.videoIdentityHookTargets.forEach { target ->
+            val mossClass = XposedHelpers.findClassIfExists(target.className, classLoader)
+                ?: return@forEach
+            target.methodNames.forEach { methodName ->
+                hookedMethodCount += hookRequestMethod(mossClass, methodName, handlerClass)
+            }
+        }
+        if (hookedMethodCount == 0) error("no supported Bilibili video identity method found")
     }
 
-    private fun hookRequestMethod(mossClass: Class<*>, methodName: String, handlerClass: Class<*>?) {
+    private fun hookRequestMethod(
+        mossClass: Class<*>,
+        methodName: String,
+        handlerClass: Class<*>?,
+    ): Int {
         val methods = mossClass.declaredMethods.filter { it.name == methodName }
         if (methods.isEmpty()) {
             Log.d("$methodName is not present in this Bilibili version")
-            return
+            return 0
         }
 
         methods.forEach { method ->
             XposedBridge.hookMethod(method, object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     param.args.firstOrNull()?.let(::readRequest)
-                    if (methodName == "playViewUnite" && handlerClass != null && param.args.size > 1) {
-                        val original = param.args[1] ?: return
-                        param.args[1] = wrapResponseHandler(original, handlerClass)
+                    if (handlerClass != null) {
+                        val handlerIndex = param.args.indexOfFirst { argument ->
+                            argument != null && handlerClass.isInstance(argument)
+                        }
+                        if (handlerIndex >= 0) {
+                            val original = param.args[handlerIndex] ?: return
+                            param.args[handlerIndex] = wrapResponseHandler(original, handlerClass)
+                        }
                     }
+                }
+
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    param.result?.let(::readResponse)
                 }
             })
         }
-        Log.d("hooked $methodName (${methods.size} overload(s))")
+        Log.d("hooked ${mossClass.simpleName}.$methodName (${methods.size} overload(s))")
+        return methods.size
     }
 
     private fun readRequest(request: Any) {
@@ -66,7 +84,6 @@ internal class VideoIdentityHook(
         }
 
     private companion object {
-        const val PLAYER_MOSS_CLASS = "com.bapis.bilibili.app.playerunite.v1.PlayerMoss"
         const val MOSS_HANDLER_CLASS = "com.bilibili.lib.moss.api.MossResponseHandler"
     }
 }

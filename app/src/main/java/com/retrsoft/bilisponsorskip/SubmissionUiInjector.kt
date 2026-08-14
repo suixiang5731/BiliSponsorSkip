@@ -672,7 +672,7 @@ internal class SubmissionUiInjector(
             val className = view.javaClass.name
             view.isAttachedToWindow && (
                 idName in PLAYER_PAGE_SEEKBAR_IDS ||
-                    ((className == PLAYER_SEEK_WIDGET_V3_CLASS || className == STORY_SEEK_BAR_CLASS) &&
+                    (BilibiliCompatibility.isPlayerProgressClass(className) &&
                         view.width > 0 && view.height > 0)
                 )
         }
@@ -1081,8 +1081,6 @@ internal class SubmissionUiInjector(
             "gemini_halfscreen_seekbar",
             *STORY_SEEKBAR_IDS.toTypedArray(),
         )
-        const val PLAYER_SEEK_WIDGET_V3_CLASS = "com.bilibili.playerbizcommonv2.widget.seek.v3.PlayerSeekWidget3"
-        const val STORY_SEEK_BAR_CLASS = "com.bilibili.video.story.view.StorySeekBar"
         const val LIGHT_SURFACE = 0xFFFDFDFD.toInt()
         const val DARK_SURFACE = 0xFF1C1C1E.toInt()
     }
