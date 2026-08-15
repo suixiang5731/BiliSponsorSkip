@@ -96,10 +96,10 @@ internal class PlayerUiInjector(
         }.onFailure { Log.e("failed to resolve expandable video title", it) }.getOrNull() ?: return
         XposedBridge.hookAllMethods(titleClass, "setText", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                if (suppressExpandableTitleHook || param.args.size < 2) return
+                if (suppressExpandableTitleHook) return
                 val title = param.thisObject as? TextView ?: return
                 if (!isDetailTitleStructure(title)) return
-                val text = param.args[0] as? CharSequence ?: return
+                val text = firstTextArgument(param.args) ?: return
                 val snapshot = controller.uiSnapshot()
                 if (!snapshot.showTitleLabel || snapshot.segments.isEmpty()) {
                     param.args[0] = stripInlineTitleLabels(text)
