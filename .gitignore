@@ -11,3 +11,10 @@ captures/
 *.keystore
 release-secrets.txt
 dist/
+
+# 反编译源码及大型二进制文件（不纳入版本管理）
+哔哩哔哩7.32.0/
+哔哩哔哩7.32.0.apk
+BiliSponsorSkip v1.2.2_for_bilibili7.32.0.apk
+BiliSponsorSkip_sourcecode_bilibili-7.32.0.zip
+BiliSponsorSkip.log
